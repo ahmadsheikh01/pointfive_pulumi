@@ -20,6 +20,31 @@ var eventCountTableName string
 var actorTableName string
 var reposTableName string
 
+func main() {
+	eventCountTableName = os.Getenv("EVENTS_COUNT_TABLE")
+	if eventCountTableName == "" {
+		fmt.Println("EVENTS_COUNT_TABLE environment variable not set")
+		os.Exit(1)
+	}
+	fmt.Println("EVENTS_COUNT_TABLE is set to", eventCountTableName)
+
+	actorTableName = os.Getenv("ACTORS_TABLE")
+	if actorTableName == "" {
+		fmt.Println("ACTORS_TABLE environment variable not set")
+		os.Exit(1)
+	}
+	fmt.Println("ACTORS_TABLE is set to", actorTableName)
+
+	reposTableName = os.Getenv("REPOS_TABLE")
+	if reposTableName == "" {
+		fmt.Println("reposTableName environment variable not set")
+		os.Exit(1)
+	}
+	fmt.Println("reposTableName is set to", reposTableName)
+
+	lambda.Start(handler)
+}
+
 func init() {
 	// Initialize the AWS SDK and DynamoDB client
 	sess := session.Must(session.NewSession())
@@ -83,7 +108,6 @@ func getRepos() (*[]Repo, error) {
 }
 
 func getActors() (*[]Actor, error) {
-	// Replace 'YourActorTableName' with your DynamoDB table name for Actor
 	input := &dynamodb.ScanInput{
 		TableName: aws.String(actorTableName),
 	}
@@ -94,7 +118,7 @@ func getActors() (*[]Actor, error) {
 	}
 
 	if result.Items == nil {
-		return nil, errors.New("actor not found")
+		return nil, errors.New("actors not found")
 	}
 
 	actors := []Actor{}
@@ -119,7 +143,7 @@ func getEvents() (*[]Event, error) {
 	}
 
 	if result.Items == nil {
-		return nil, errors.New("actor not found")
+		return nil, errors.New("events not found")
 	}
 	events := []Event{}
 	for _, i := range result.Items {
@@ -165,31 +189,6 @@ func handler(ctx context.Context, event json.RawMessage) (interface{}, error) {
 		}
 		return events, nil
 	default:
-		return nil, errors.New("invalid 'fieldName' in request")
+		return nil, errors.New("invalid request")
 	}
-}
-
-func main() {
-	eventCountTableName = os.Getenv("EVENTS_COUNT_TABLE")
-	if eventCountTableName == "" {
-		fmt.Println("EVENTS_COUNT_TABLE environment variable not set")
-		os.Exit(1)
-	}
-	fmt.Println("EVENTS_COUNT_TABLE is set to", eventCountTableName)
-
-	actorTableName = os.Getenv("ACTORS_TABLE")
-	if actorTableName == "" {
-		fmt.Println("ACTORS_TABLE environment variable not set")
-		os.Exit(1)
-	}
-	fmt.Println("ACTORS_TABLE is set to", actorTableName)
-
-	reposTableName = os.Getenv("REPOS_TABLE")
-	if reposTableName == "" {
-		fmt.Println("reposTableName environment variable not set")
-		os.Exit(1)
-	}
-	fmt.Println("reposTableName is set to", reposTableName)
-
-	lambda.Start(handler)
 }
